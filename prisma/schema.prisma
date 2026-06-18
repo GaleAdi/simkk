@@ -1,0 +1,122 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String
+  email     String?  @unique
+  role      Role     @default(KARYAWAN)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  karyawan          Karyawan?
+  hrd               HRD?
+  assessmentsGiven  Assessment[]         @relation("Penilai")
+}
+
+enum Role {
+  HRD
+  KARYAWAN
+}
+
+model Karyawan {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  nama      String
+  jabatan   String
+  divisi    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentsReceived Assessment[]        @relation("AssessmentTarget")
+  assessmentResults   AssessmentResult[]
+}
+
+model HRD {
+  id     String @id @default(cuid())
+  userId String @unique
+  nama   String
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reports Report[]
+}
+
+model Assessment {
+  id         String           @id @default(cuid())
+  targetId   String
+  penilaiId  String
+  jenis      JenisPenilaian
+  status     StatusPenilaian  @default(PENDING)
+  deadline   DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  target      Karyawan        @relation("AssessmentTarget", fields: [targetId], references: [id])
+  penilai     User            @relation("Penilai", fields: [penilaiId], references: [id])
+  formEntries AssessmentForm[]
+}
+
+enum JenisPenilaian {
+  SELF
+  ATASAN
+  REKAN_KERJA
+  BAWAHAN
+}
+
+enum StatusPenilaian {
+  PENDING
+  COMPLETED
+}
+
+model AssessmentForm {
+  id           String  @id @default(cuid())
+  assessmentId String
+  indikator    AKHLAK
+  nilai        Int     @default(0)
+  catatan      String? @db.Text
+
+  assessment Assessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+}
+
+enum AKHLAK {
+  AMANAH
+  KOMPETEN
+  HARMONIS
+  LOYAL
+  ADAPTIF
+  KOLABORATIF
+}
+
+model AssessmentResult {
+  id           String   @id @default(cuid())
+  karyawanId   String   @unique
+  amanah       Float    @default(0)
+  kompeten     Float    @default(0)
+  harmonis     Float    @default(0)
+  loyal        Float    @default(0)
+  adaptif      Float    @default(0)
+  kolaboratif  Float    @default(0)
+  nilaiAkhir   Float    @default(0)
+  calculatedAt DateTime @default(now())
+
+  karyawan Karyawan @relation(fields: [karyawanId], references: [id])
+}
+
+model Report {
+  id           String   @id @default(cuid())
+  hrdId        String
+  labelLaporan String
+  typeLaporan  String
+  formatExport String       @default("PDF")
+  tanggalBuat  DateTime     @default(now())
+
+  hrd HRD @relation(fields: [hrdId], references: [id])
+}
