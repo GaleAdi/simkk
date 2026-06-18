@@ -76,11 +76,15 @@ const divisiColors: Record<string, string> = {
   Umum: "bg-gray-50 text-gray-700 border-gray-200",
 };
 
-export function KaryawanTable() {
-  const [karyawans, setKaryawans] = useState<Karyawan[]>([]);
-  const [filteredKaryawans, setFilteredKaryawans] = useState<Karyawan[]>([]);
+interface KaryawanTableProps {
+  initialKaryawans?: Karyawan[];
+}
+
+export function KaryawanTable({ initialKaryawans = [] }: KaryawanTableProps) {
+  const [karyawans, setKaryawans] = useState<Karyawan[]>(initialKaryawans);
+  const [filteredKaryawans, setFilteredKaryawans] = useState<Karyawan[]>(initialKaryawans);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -94,9 +98,9 @@ export function KaryawanTable() {
   const fetchKaryawans = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/karyawan");
+      const response = await fetch("/api/karyawan", { credentials: "include" });
       if (response.ok) {
-        const data = await response.json();
+        const data: Karyawan[] = await response.json();
         setKaryawans(data);
         setFilteredKaryawans(data);
       }
@@ -106,10 +110,6 @@ export function KaryawanTable() {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    fetchKaryawans();
-  }, []);
 
   useEffect(() => {
     const query = searchQuery.toLowerCase();
@@ -172,7 +172,12 @@ export function KaryawanTable() {
         email: formData.email,
       };
       if (formData.password) payload.password = formData.password;
-      const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const response = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        credentials: "include",
+      });
       if (response.ok) {
         toast({
           title: "Berhasil",
@@ -195,7 +200,10 @@ export function KaryawanTable() {
     if (!deletingKaryawan) return;
     setIsSubmitting(true);
     try {
-      const response = await fetch(`/api/karyawan/${deletingKaryawan.id}`, { method: "DELETE" });
+      const response = await fetch(`/api/karyawan/${deletingKaryawan.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
       if (response.ok) {
         toast({ title: "Berhasil", description: "Karyawan berhasil dihapus" });
         setIsDeleteDialogOpen(false);
@@ -249,7 +257,7 @@ export function KaryawanTable() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
+            {isLoading && filteredKaryawans.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="text-center py-12 text-gray-400">
                   <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />
@@ -320,7 +328,6 @@ export function KaryawanTable() {
         </Table>
       </div>
 
-      {/* Stats */}
       {filteredKaryawans.length > 0 && (
         <p className="text-xs text-gray-400 text-center">
           Menampilkan {filteredKaryawans.length} dari {karyawans.length} karyawan
