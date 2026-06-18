@@ -20,7 +20,11 @@ coverage/
 # Misc
 .DS_Store
 *.pem
-.env*.local
+
+# Environment variables
+.env
+.env.local
+.env.production
 
 # Debug
 npm-debug.log*
@@ -44,3 +48,5 @@ next-env.d.ts
 # Prisma
 prisma/*.ts
 !prisma/schema.prisma
+
+.vercel

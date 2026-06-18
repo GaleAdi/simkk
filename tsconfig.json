@@ -22,5 +22,5 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "prisma/addHrdKaryawan.ts", "prisma/addKaryawanDemo.ts"]
+  "exclude": ["node_modules", "prisma/addHrdKaryawan.ts", "prisma/addKaryawanDemo.ts", "prisma/listUsers.ts", "prisma/resetPassword.ts", "prisma/seed.ts"]
 }
