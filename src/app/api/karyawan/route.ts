@@ -29,14 +29,19 @@ export async function GET() {
       orderBy: { username: "asc" },
     });
 
-    // Only return users that have a Karyawan profile
+    // Return in nested format matching Karyawan interface
     const result = karyawans
       .filter((u) => u.karyawan !== null)
       .map((u) => ({
-        userId: u.id,
-        username: u.username,
-        role: u.role,
-        ...u.karyawan,
+        id: u.karyawan!.id,
+        nama: u.karyawan!.nama,
+        jabatan: u.karyawan!.jabatan,
+        divisi: u.karyawan!.divisi,
+        user: {
+          username: u.username,
+          email: u.email,
+          role: u.role,
+        },
       }));
 
     return NextResponse.json(result);
@@ -101,7 +106,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return user;
+      return {
+        id: user.karyawan!.id,
+        nama: user.karyawan!.nama,
+        jabatan: user.karyawan!.jabatan,
+        divisi: user.karyawan!.divisi,
+        user: {
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+      };
     });
 
     return NextResponse.json(result, { status: 201 });

@@ -101,8 +101,21 @@ export function KaryawanTable({ initialKaryawans = [] }: KaryawanTableProps) {
       const response = await fetch("/api/karyawan", { credentials: "include" });
       if (response.ok) {
         const data: Karyawan[] = await response.json();
-        setKaryawans(data);
-        setFilteredKaryawans(data);
+        // Defensive: normalize flat API response to nested format
+        const normalized = data.map((k) =>
+          "user" in k && k.user && typeof k.user === "object"
+            ? k
+            : {
+                ...k,
+                user: {
+                  username: (k as any).username || (k as any).user?.username || "",
+                  email: (k as any).email || (k as any).user?.email || null,
+                  role: (k as any).role || (k as any).user?.role || "KARYAWAN",
+                },
+              }
+        );
+        setKaryawans(normalized);
+        setFilteredKaryawans(normalized);
       }
     } catch {
       toast({ title: "Error", description: "Gagal mengambil data karyawan", variant: "destructive" });
